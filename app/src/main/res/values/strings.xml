@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Step View</string>
+
+
+    <integer-array name="status">
+        <item>10</item>
+        <item>80</item>
+        <item>135</item>
+        <item>152</item>
+        <item>180</item>
+    </integer-array>
+</resources>

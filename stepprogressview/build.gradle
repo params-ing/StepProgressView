@@ -1,0 +1,59 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'StepProgressView'
+
+    publishedGroupId = 'com.params.progressview'
+    libraryName = 'stepprogressview'
+    artifact = 'step-progress'
+    libraryVersion = '1.0.0'
+    libraryDescription = 'An Android library written in kotlin to display steps in a progress bar.'
+
+    siteUrl = 'https://github.com/params-ing/StepProgressView'
+    gitUrl = 'https://github.com/params-ing/StepProgressView.git'
+
+    developerId = 'params-ing'
+    developerName = 'Parminder Singh'
+    developerEmail = 'pisingh02@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+
+
+android {
+    compileSdkVersion versions.compileSdk
+
+
+
+    defaultConfig {
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+        versionCode 1
+        versionName "1.0.1"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "com.android.support:appcompat-v7:$versions.supportLibrary"
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin_version"
+}
+
+tasks.withType(Javadoc) {
+    enabled = false
+}
+
+apply from: 'https://raw.githubusercontent.com/params-ing/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/params-ing/JCenter/master/bintrayv1.gradle'

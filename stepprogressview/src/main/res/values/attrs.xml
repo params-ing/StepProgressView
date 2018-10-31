@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="StepProgressView">
+        <attr name="progressBarHeight" format="dimension" />
+        <attr name="textMargin" format="dimension" />
+        <attr name="markerWidth" format="dimension" />
+        <attr name="textSize" format="dimension" />
+        <attr name="totalProgress" format="integer" />
+        <attr name="currentProgress" format="integer" />
+
+        <attr name="markerColor" format="color"/>
+        <attr name="progressBackgroundColor" format="color"/>
+        <attr name="progressColor" format="color"/>
+        <attr name="textColor" format="color"/>
+
+        <attr name="markers" format="string" />
+    </declare-styleable>
+
+</resources>
