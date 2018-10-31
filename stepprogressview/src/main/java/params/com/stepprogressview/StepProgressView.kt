@@ -25,7 +25,7 @@ class StepProgressView @JvmOverloads constructor(
     public var markerWidth: Float by OnValidateProp(3F.pxValue())
 
 
-    public var rectRadius: Float by OnValidateProp(10F.pxValue())
+    public var rectRadius: Float by OnValidateProp(5F.pxValue())
 
 
     public var textMargin: Float by OnValidateProp(10F.pxValue())
@@ -185,11 +185,17 @@ class StepProgressView @JvmOverloads constructor(
 
         rectBar.left = 0F
 
-        if (currentProgress > 0) {
+
+        if (currentProgress in 1 until totalProgress) {
 
             val progressX: Float = (currentProgress / totalProgress.toFloat()) * (rectBar.right - rectBar.left)
 
-            rectBarProgress.left = rectBar.left
+            rectBar.left = progressX
+
+            //to avoid redrawing
+            canvas.drawRoundedRightRect(rectRadius, rectBar, paintBackground)
+
+            rectBarProgress.left = 0F
             rectBarProgress.top = rectBar.top
             rectBarProgress.right = progressX
             rectBarProgress.bottom = rectBar.bottom
@@ -197,18 +203,13 @@ class StepProgressView @JvmOverloads constructor(
             //to avoid redrawing
             canvas.drawRoundedLeftRect(rectRadius, rectBarProgress, paintProgress)
 
-            rectBar.left = progressX
-
-
-            //to avoid redrawing
-            canvas.drawRoundedRightRect(rectRadius, rectBar, paintBackground)
 
 
         } else {
 
             //incase there is no progress only draw background progress bar
-
-            canvas.drawRoundRect(rectBarProgress, rectRadius, rectRadius, paintProgress)
+            val paint = if (currentProgress > 0) paintProgress else paintBackground
+            canvas.drawRoundRect(rectBar, rectRadius, rectRadius, paint)
 
         }
 
