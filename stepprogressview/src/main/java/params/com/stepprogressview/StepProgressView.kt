@@ -76,9 +76,13 @@ class StepProgressView @JvmOverloads constructor(
     }
 
 
-    private val rectBar = RectF()
+    private val rBar = RectF()
 
-    private var rectBarProgress = RectF()
+    //used for drawing one-side curved rectangle
+    private val rectRoundPath = Path()
+
+    //used fo drawing complete view
+    private val drawingPath = Path()
 
     private val arcRect = RectF()
 
@@ -130,8 +134,6 @@ class StepProgressView @JvmOverloads constructor(
             a.recycle()
         }
 
-
-
         propsInitialisedOnce = true
     }
 
@@ -165,7 +167,7 @@ class StepProgressView @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, leftP: Int, topP: Int, rightP: Int, bottomP: Int) {
         super.onLayout(changed, leftP, topP, rightP, bottomP)
 
-        rectBar.apply {
+        rBar.apply {
             left = 0F
             top = 0F
             right = rightP.toFloat() - leftP.toFloat()
@@ -173,92 +175,146 @@ class StepProgressView @JvmOverloads constructor(
         }
 
 
-
         textVerticalCenter = (progressBarHeight + textMargin) + textHeight
 
 
     }
 
+
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-
-        rectBar.left = 0F
-
+        drawingPath.reset()
 
         if (currentProgress in 1 until totalProgress) {
 
-            val progressX: Float = (currentProgress / totalProgress.toFloat()) * (rectBar.right - rectBar.left)
+            val progressX = (currentProgress / totalProgress.toFloat()) * (rBar.right - rBar.left)
 
-            rectBar.left = progressX
 
-            //to avoid redrawing
-            canvas.drawRoundedRightRect(rectRadius, rectBar, paintBackground)
+            if (progressX > rectRadius) { //if progress exceeds beyond left corner avoid redrawing
 
-            rectBarProgress.left = 0F
-            rectBarProgress.top = rectBar.top
-            rectBarProgress.right = progressX
-            rectBarProgress.bottom = rectBar.bottom
 
-            //to avoid redrawing
-            canvas.drawRoundedLeftRect(rectRadius, rectBarProgress, paintProgress)
+                //progressX-1 is used so that there is no gap between progressRect drawing and
+                // backgroundRect Drawing
+                drawingPath.addPath(drawRoundedRightRect((progressX - 1), rBar.top, rBar.right,
+                        rBar.bottom, rectRadius, paintBackground, canvas))
 
+
+                val progressRight: Float
+                val drawProgressInRightCorner = progressX > (rBar.right - rectRadius)
+
+                if (drawProgressInRightCorner) {
+                    progressRight = rBar.right - rectRadius
+                } else {
+                    progressRight = progressX
+
+                }
+
+                drawingPath.addPath(drawRoundedLeftRect(rBar.left, rBar.top, progressRight,
+                        rBar.bottom, rectRadius, paintProgress, canvas))
+
+                canvas.save()
+                canvas.clipPath(drawingPath)
+
+                if (drawProgressInRightCorner) {
+
+                    canvas.drawRect((rBar.right - rectRadius), rBar.top, progressX, rBar.bottom, paintProgress)
+
+                }
+
+
+            } else {
+
+                drawCompleteProgressBar(canvas, paintBackground)
+
+                canvas.drawRect(rBar.left, rBar.top, progressX, rBar.bottom, paintProgress)
+
+
+            }
 
 
         } else {
 
             //incase there is no progress only draw background progress bar
             val paint = if (currentProgress > 0) paintProgress else paintBackground
-            canvas.drawRoundRect(rectBar, rectRadius, rectRadius, paint)
+
+            drawCompleteProgressBar(canvas, paint)
 
         }
 
 
-        rectBar.left = 0F
 
         for (i in markers) {
-            val left: Float = (i / totalProgress.toFloat()) * (rectBar.right - rectBar.left)
+            if (i in 1..totalProgress) {
+                val left: Float = (i / totalProgress.toFloat()) * (rBar.right - rBar.left)
 
-            canvas.drawRect(left - markerWidth / 2, rectBar.top, left + markerWidth / 2
-                    , rectBar.bottom, paintMarkers)
+                canvas.drawRect(left - markerWidth / 2, rBar.top, left + markerWidth / 2
+                        , rBar.bottom, paintMarkers)
 
 
 
-            canvas.drawText(i.toString(), left, textVerticalCenter, paintText)
+                canvas.drawText(i.toString(), left, textVerticalCenter, paintText)
+            }
 
         }
 
+        canvas.restore()
+    }
+
+    private fun drawCompleteProgressBar(canvas: Canvas, paint: Paint) {
+        drawingPath.addRoundRect(rBar, rectRadius, rectRadius, Path.Direction.CW)
+
+        canvas.drawPath(drawingPath, paint)
+        canvas.save()
+        canvas.clipPath(drawingPath)
     }
 
 
-    private fun Canvas.drawRoundedLeftRect(cornerRadius: Float, rect: RectF, paint: Paint) {
 
+    private fun drawRoundedLeftRect(leftP: Float, topP: Float, rightP: Float, bottomP: Float,
+                                    cornerRadius: Float, paint: Paint, canvas: Canvas): Path {
+
+        rectRoundPath.reset()
         arcRect.run {
-            left = rect.left
-            top = rect.top
-            right = rect.left + (2 * cornerRadius)
-            bottom = rect.bottom
+            left = leftP
+            top = topP
+            right = leftP + (2 * cornerRadius)
+            bottom = bottomP
         }
 
-        drawArc(arcRect, 90F, 360F, true, paint)
 
-        drawRect(rect.left + cornerRadius, rect.top, rect.right, rect.bottom, paint)
+        rectRoundPath.addArc(arcRect, 90F, 180F)
 
+        rectRoundPath.addRect(leftP + cornerRadius, topP, rightP, bottomP, Path.Direction.CW)
 
+        canvas.drawPath(rectRoundPath, paint)
+
+        return rectRoundPath
     }
 
-    private fun Canvas.drawRoundedRightRect(cornerRadius: Float, rect: RectF, paint: Paint) {
+
+    private fun drawRoundedRightRect(leftP: Float, topP: Float, rightP: Float, bottomP: Float,
+                                     cornerRadius: Float, paint: Paint, canvas: Canvas): Path {
 
         arcRect.run {
-            left = rect.right - (2 * cornerRadius)
-            top = rect.top
-            right = rect.right
-            bottom = rect.bottom
+            left = rightP - (2 * cornerRadius)
+            top = topP
+            right = rightP
+            bottom = bottomP
         }
 
-        drawArc(arcRect, 360F, 450F, true, paint)
 
-        drawRect(rect.left, rect.top, rect.right - cornerRadius, rect.bottom, paint)
+
+        rectRoundPath.reset()
+        if (rightP - leftP > cornerRadius) {
+            rectRoundPath.addRect(leftP, topP, rightP - cornerRadius, bottomP, Path.Direction.CW)
+
+        }
+        rectRoundPath.addArc(arcRect, -90F, 180F)
+        canvas.drawPath(rectRoundPath, paint)
+
+        return rectRoundPath
 
     }
 
