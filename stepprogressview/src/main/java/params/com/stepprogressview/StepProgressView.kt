@@ -123,7 +123,7 @@ class StepProgressView @JvmOverloads constructor(
                 val input = markerString.split(",")
 
                 try {
-                    input.map { it -> this.markers.add(it.toInt()) }
+                    input.map { it -> if(it.toInt() in 1 .. totalProgress) this.markers.add(it.toInt()) }
                 } catch (e: Exception) {
                     throw  IllegalArgumentException("Invalid input markers! Should be comma separated digits");
                 }
@@ -253,13 +253,24 @@ class StepProgressView @JvmOverloads constructor(
                         , rBar.bottom, paintMarkers)
 
 
+            }
+
+        }
+
+        canvas.restore()
+
+
+        // using one more for loop instead of saving & restoring canvas for text since, that would be
+        //more precious
+        for (i in markers) {
+            if (i in 1..totalProgress) {
+                val left: Float = (i / totalProgress.toFloat()) * (rBar.right - rBar.left)
 
                 canvas.drawText(i.toString(), left, textVerticalCenter, paintText)
             }
 
         }
 
-        canvas.restore()
     }
 
     private fun drawCompleteProgressBar(canvas: Canvas, paint: Paint) {
