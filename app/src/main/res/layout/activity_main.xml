@@ -8,21 +8,22 @@
 
 
     <params.com.stepprogressview.StepProgressView
+        android:id="@+id/pbar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:progressBarWidth="300dp"
-        app:currentProgress="400"
+        app:currentProgress="75"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:markers="1,450,999"
+        app:markers="1,50,140,200"
         app:markerColor="@color/colorPrimaryDark"
         app:markerWidth="2dp"
         app:progressColor="@color/colorAccent"
-        app:textMargin="5dp"
-        app:textSize="15sp"
-        app:totalProgress="1000" />
+        app:textMargin="10dp"
+        app:textSize="14sp"
+        app:totalProgress="200" />
 
 
 

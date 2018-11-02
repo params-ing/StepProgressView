@@ -2,6 +2,7 @@ package params.com.stepprogressview
 
 import android.content.Context
 import android.graphics.*
+import android.support.v4.content.res.ResourcesCompat
 import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.TypedValue
@@ -122,6 +123,16 @@ class StepProgressView @JvmOverloads constructor(
             markerColor = a.getColor(R.styleable.StepProgressView_markerColor, markerColor)
             progressColor = a.getColor(R.styleable.StepProgressView_progressColor, progressColor)
             textColorMarker = a.getColor(R.styleable.StepProgressView_textColor, textColorMarker)
+
+            try {
+                val resource: Int = a.getResourceId(R.styleable.StepProgressView_textFont, -1)
+                if (resource != -1) {
+                    val statusTypeface = ResourcesCompat.getFont(getContext(), resource)
+                    paintText.typeface = statusTypeface
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
 
 
             val markerString = a.getString(R.styleable.StepProgressView_markers)
