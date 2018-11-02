@@ -25,4 +25,3 @@ implementation 'com.params.progressview:step-progress:1.0.0'
 
 ### TODO
 * Status overlap in case the text labels are too close <br>
-* Markers at extreme edges

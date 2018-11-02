@@ -16,10 +16,11 @@ class StepProgressView @JvmOverloads constructor(
 
     public var totalProgress: Int by OnValidateProp(184)
 
-    public var markers: MutableList<Int> by OnValidateProp(mutableListOf(10, 80, 112, 136, 152))
+    //list should be sorted in increasing order as per markers progress
+    public var markers: MutableList<Int> by OnLayoutProp(mutableListOf())
 
 
-    public var currentProgress: Int by OnValidateProp(60)
+    public var currentProgress: Int by OnValidateProp(0)
 
 
     public var markerWidth: Float by OnValidateProp(3F.pxValue())
@@ -32,6 +33,8 @@ class StepProgressView @JvmOverloads constructor(
 
 
     public var progressBarHeight: Float by OnLayoutProp(15F.pxValue())
+
+    public var progressBarWidth:Float by OnLayoutProp(300F.pxValue())
 
 
     public var textSizeMarkers: Float by OnLayoutProp(12F.pxValue(TypedValue.COMPLEX_UNIT_SP)) {
@@ -92,7 +95,10 @@ class StepProgressView @JvmOverloads constructor(
 
     private var propsInitialisedOnce = false
 
-    private val minWidthProgressBar = 300F.pxValue()
+    private var extraWidthLeftText: Float = 0F
+
+    private var extraWidthRightText: Float = 0F
+
 
     init {
 
@@ -105,6 +111,8 @@ class StepProgressView @JvmOverloads constructor(
 
             progressBarHeight = a.getDimension(R.styleable.StepProgressView_progressBarHeight,
                     progressBarHeight)
+            progressBarWidth = a.getDimension(R.styleable.StepProgressView_progressBarWidth,
+                    progressBarWidth)
             textMargin = a.getDimension(R.styleable.StepProgressView_textMargin, textMargin)
             markerWidth = a.getDimension(R.styleable.StepProgressView_markerWidth, markerWidth)
             textSizeMarkers = a.getDimension(R.styleable.StepProgressView_textSize, textSizeMarkers)
@@ -146,20 +154,62 @@ class StepProgressView @JvmOverloads constructor(
     }
 
     override fun getSuggestedMinimumWidth(): Int {
-        return (minWidthProgressBar).toInt()
+        return  Math.ceil((progressBarWidth + setExtraWidthDataForExtremes()).toDouble()).toInt()
     }
 
     override fun getSuggestedMinimumHeight(): Int {
-        textHeight = getTextHeight()
-        return (progressBarHeight + textHeight + textMargin).toInt()
+
+        return  Math.ceil((progressBarHeight +  setTextHeight()).toDouble()).toInt()
     }
 
-    private fun getTextHeight(): Int {
+    private fun setTextHeight(): Float {
+
+        if(markers.size==0){
+            return 0F
+        }
 
         val rect = Rect()
         val text = "8"
         paintText.getTextBounds(text, 0, text.length, rect)
-        return rect.height()
+        textHeight = rect.height()
+        return textHeight + textMargin
+
+    }
+
+    /**
+     * Calculates if there is any additional width needed to show marker text at extremer left/right
+     * and sets variables accordingly
+     */
+    private fun setExtraWidthDataForExtremes():Float {
+
+        extraWidthLeftText = 0F
+        extraWidthRightText = 0F
+
+        markers.run {
+
+
+            if (size == 0)
+                return 0F
+
+            val extraWidthLeft: Float = paintText.measureText(this[0].toString())/2
+            val posXFirst: Float = (this[0] / totalProgress.toFloat()) * (progressBarWidth)
+
+            if (posXFirst - extraWidthLeft < 0) {
+                extraWidthLeftText = extraWidthLeft - posXFirst
+            }
+
+            val lastIndex = size - 1
+            if (lastIndex > -1) {
+                val posXLast: Float = (this[lastIndex] / totalProgress.toFloat()) * (progressBarWidth)
+                val extraWidthRight: Float = paintText.measureText(this[lastIndex].toString())/2
+                if (posXLast + extraWidthRight > progressBarWidth) {
+                    extraWidthRightText = (extraWidthRight - (progressBarWidth -posXLast))
+                }
+
+            }
+
+        }
+        return extraWidthLeftText + extraWidthRightText
 
     }
 
@@ -168,9 +218,9 @@ class StepProgressView @JvmOverloads constructor(
         super.onLayout(changed, leftP, topP, rightP, bottomP)
 
         rBar.apply {
-            left = 0F
+            left = extraWidthLeftText
             top = 0F
-            right = rightP.toFloat() - leftP.toFloat()
+            right = left + progressBarWidth
             bottom = progressBarHeight
         }
 
@@ -247,7 +297,8 @@ class StepProgressView @JvmOverloads constructor(
 
         for (i in markers) {
             if (i in 1..totalProgress) {
-                val left: Float = (i / totalProgress.toFloat()) * (rBar.right - rBar.left)
+                val left: Float = (i / totalProgress.toFloat()) * (rBar.right - rBar.left) +
+                        extraWidthLeftText
 
                 canvas.drawRect(left - markerWidth / 2, rBar.top, left + markerWidth / 2
                         , rBar.bottom, paintMarkers)
@@ -264,7 +315,8 @@ class StepProgressView @JvmOverloads constructor(
         //more precious
         for (i in markers) {
             if (i in 1..totalProgress) {
-                val left: Float = (i / totalProgress.toFloat()) * (rBar.right - rBar.left)
+                val left: Float = (i / totalProgress.toFloat()) * (rBar.right - rBar.left)+
+                        extraWidthLeftText
 
                 canvas.drawText(i.toString(), left, textVerticalCenter, paintText)
             }

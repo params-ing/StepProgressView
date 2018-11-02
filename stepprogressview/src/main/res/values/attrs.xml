@@ -3,6 +3,7 @@
 
     <declare-styleable name="StepProgressView">
         <attr name="progressBarHeight" format="dimension" />
+        <attr name="progressBarWidth" format="dimension" />
         <attr name="textMargin" format="dimension" />
         <attr name="markerWidth" format="dimension" />
         <attr name="textSize" format="dimension" />
