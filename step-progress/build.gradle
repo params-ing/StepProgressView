@@ -8,7 +8,7 @@ ext {
     publishedGroupId = 'com.params.progressview'
     libraryName = 'stepprogressview'
     artifact = 'step-progress'
-    libraryVersion = '1.0.0'
+    libraryVersion = '1.0.2'
     libraryDescription = 'An Android library written in kotlin to display steps in a progress bar.'
 
     siteUrl = 'https://github.com/params-ing/StepProgressView'

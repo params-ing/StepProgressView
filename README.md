@@ -4,7 +4,7 @@ An Android library written in kotlin to display steps in a progress bar
 ## Setup
 
 ```
-implementation 'com.params.progressview:step-progress:1.0.0'
+implementation 'com.params.progressview:step-progress:1.0.2'
 ```
 
 

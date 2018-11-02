@@ -27,6 +27,7 @@ dependencies {
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin_version"
     implementation "com.android.support:appcompat-v7:$versions.supportLibrary"
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
-    implementation project(":stepprogressview")
+//    implementation 'com.params.progressview:step-progress:1.0.2'
+    implementation project(":step-progress")
 
 }

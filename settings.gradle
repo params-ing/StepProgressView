@@ -1,1 +1,1 @@
-include ':app', ':stepprogressview'
+include ':app', ':step-progress'
