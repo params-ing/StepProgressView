@@ -20,13 +20,17 @@ class StepProgressView @JvmOverloads constructor(
     private var totalProgress: Int by OnValidateProp(184)
 
     //list should be sorted in increasing order as per markers progress
-    var markers: MutableList<Int> by OnLayoutProp(mutableListOf())
+    private var markers: MutableList<Int> by OnLayoutProp(mutableListOf())
 
-    var markersLabels: MutableList<String> by OnLayoutProp(mutableListOf())
+    private var markersLabels: MutableList<String> by OnLayoutProp(mutableListOf())
 
     var currentProgress: Int by OnValidateProp(0)
 
-    var markerWidth: Float by OnValidateProp(3F.pxValue())
+    private var markerWidth: Float by OnValidateProp(3F.pxValue())
+
+    var markerRadius: Float by OnValidateProp(2F.pxValue())
+
+    var markerShape: Int by OnValidateProp(0)
 
     var rectRadius: Float by OnValidateProp(5F.pxValue())
 
@@ -110,6 +114,8 @@ class StepProgressView @JvmOverloads constructor(
                     progressBarWidth)
             textMargin = a.getDimension(R.styleable.StepProgressView_textMargin, textMargin)
             markerWidth = a.getDimension(R.styleable.StepProgressView_markerWidth, markerWidth)
+            markerRadius = a.getDimension(R.styleable.StepProgressView_markerRadius, markerRadius)
+            markerShape = a.getInt(R.styleable.StepProgressView_markerShape, markerShape)
             textSizeMarkers = a.getDimension(R.styleable.StepProgressView_textSize, textSizeMarkers)
 
             progressBackgroundColor = a.getColor(R.styleable.StepProgressView_progressBackgroundColor,
@@ -201,7 +207,6 @@ class StepProgressView @JvmOverloads constructor(
         extraWidthRightText = 0F
 
         markersLabels.run {
-
             if (size == 0)
                 return 0F
 
@@ -289,8 +294,15 @@ class StepProgressView @JvmOverloads constructor(
                 val left: Float = (i / totalProgress.toFloat()) * (rBar.right - rBar.left) +
                         extraWidthLeftText
 
-                canvas.drawRect(left - markerWidth / 2, rBar.top, left + markerWidth / 2
-                        , rBar.bottom, paintMarkers)
+                when(markerShape) {
+                    0 -> {
+                        canvas.drawRect(left - markerWidth / 2, rBar.top, left + markerWidth / 2
+                            , rBar.bottom, paintMarkers)
+                    }
+                    1 -> {
+                        canvas.drawCircle(left - markerWidth / 2, rBar.top + progressBarHeight / 2, markerRadius, paintMarkers)
+                    }
+                }
             }
         }
 
