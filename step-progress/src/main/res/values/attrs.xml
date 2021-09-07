@@ -5,7 +5,6 @@
         <attr name="progressBarHeight" format="dimension" />
         <attr name="progressBarWidth" format="dimension" />
         <attr name="textMargin" format="dimension" />
-        <attr name="markerWidth" format="dimension" />
         <attr name="textSize" format="dimension" />
         <attr name="totalProgress" format="integer" />
         <attr name="currentProgress" format="integer" />
@@ -17,6 +16,13 @@
         <attr name="textFont" format="reference"/>
 
         <attr name="markers" format="string" />
+        <attr name="markersLabels" format="string" />
+        <attr name="markerWidth" format="dimension" />
+        <attr name="markerRadius" format="dimension" />
+        <attr name="markerShape">
+            <enum name="rect" value="0"/>
+            <enum name="oval" value="1"/>
+        </attr>
     </declare-styleable>
 
 </resources>
