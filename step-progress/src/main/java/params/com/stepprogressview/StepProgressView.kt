@@ -1,12 +1,14 @@
 package params.com.stepprogressview
 
 import android.content.Context
+import android.content.res.TypedArray
 import android.graphics.*
 import android.support.v4.content.res.ResourcesCompat
 import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
+import kotlin.math.ceil
 import kotlin.reflect.KProperty
 
 
@@ -15,47 +17,42 @@ class StepProgressView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
 
-    public var totalProgress: Int by OnValidateProp(184)
+    private var totalProgress: Int by OnValidateProp(184)
 
     //list should be sorted in increasing order as per markers progress
-    public var markers: MutableList<Int> by OnLayoutProp(mutableListOf())
+    var markers: MutableList<Int> by OnLayoutProp(mutableListOf())
 
+    var markersLabels: MutableList<String> by OnLayoutProp(mutableListOf())
 
-    public var currentProgress: Int by OnValidateProp(0)
+    var currentProgress: Int by OnValidateProp(0)
 
+    var markerWidth: Float by OnValidateProp(3F.pxValue())
 
-    public var markerWidth: Float by OnValidateProp(3F.pxValue())
+    var rectRadius: Float by OnValidateProp(5F.pxValue())
 
+    var textMargin: Float by OnValidateProp(10F.pxValue())
 
-    public var rectRadius: Float by OnValidateProp(5F.pxValue())
+    var progressBarHeight: Float by OnLayoutProp(15F.pxValue())
 
+    var progressBarWidth:Float by OnLayoutProp(300F.pxValue())
 
-    public var textMargin: Float by OnValidateProp(10F.pxValue())
-
-
-    public var progressBarHeight: Float by OnLayoutProp(15F.pxValue())
-
-    public var progressBarWidth:Float by OnLayoutProp(300F.pxValue())
-
-
-    public var textSizeMarkers: Float by OnLayoutProp(12F.pxValue(TypedValue.COMPLEX_UNIT_SP)) {
+    var textSizeMarkers: Float by OnLayoutProp(12F.pxValue(TypedValue.COMPLEX_UNIT_SP)) {
         paintText.textSize = textSizeMarkers
-
     }
 
-    public var markerColor: Int by OnValidateProp(Color.WHITE) {
+    var markerColor: Int by OnValidateProp(Color.WHITE) {
         paintMarkers.color = markerColor
     }
 
-    public var progressColor: Int by OnValidateProp(Color.GREEN) {
+    var progressColor: Int by OnValidateProp(Color.GREEN) {
         paintProgress.color = progressColor
     }
 
-    public var progressBackgroundColor: Int by OnValidateProp(Color.GRAY) {
+    var progressBackgroundColor: Int by OnValidateProp(Color.GRAY) {
         paintBackground.color = progressBackgroundColor
     }
 
-    public var textColorMarker: Int by OnValidateProp(Color.BLACK) {
+    private var textColorMarker: Int by OnValidateProp(Color.BLACK) {
         paintText.color = textColorMarker
     }
 
@@ -71,14 +68,13 @@ class StepProgressView @JvmOverloads constructor(
         it.color = progressColor
     }
 
-    val paintText = TextPaint(Paint.ANTI_ALIAS_FLAG).also {
+    private val paintText = TextPaint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = textColorMarker
         it.style = Paint.Style.FILL
         it.textSize = textSizeMarkers
         it.textAlign = Paint.Align.CENTER
         it.typeface = Typeface.DEFAULT
     }
-
 
     private val rBar = RectF()
 
@@ -100,13 +96,11 @@ class StepProgressView @JvmOverloads constructor(
 
     private var extraWidthRightText: Float = 0F
 
-
     init {
 
         val a = context.theme.obtainStyledAttributes(attrs, R.styleable.StepProgressView, 0, 0)
 
         try {
-
             currentProgress = a.getInt(R.styleable.StepProgressView_currentProgress, currentProgress)
             totalProgress = a.getInt(R.styleable.StepProgressView_totalProgress, totalProgress)
 
@@ -134,20 +128,8 @@ class StepProgressView @JvmOverloads constructor(
                 e.printStackTrace()
             }
 
-
-            val markerString = a.getString(R.styleable.StepProgressView_markers)
-            if (!markerString.isNullOrBlank()) {
-                this.markers.clear()
-
-                val input = markerString.split(",")
-
-                try {
-                    input.map { it -> if(it.toInt() in 1 .. totalProgress) this.markers.add(it.toInt()) }
-                } catch (e: Exception) {
-                    throw  IllegalArgumentException("Invalid input markers! Should be comma separated digits");
-                }
-            }
-
+            setupMarkers(a)
+            setupMarkersLabels(a)
 
         } finally {
             a.recycle()
@@ -165,17 +147,15 @@ class StepProgressView @JvmOverloads constructor(
     }
 
     override fun getSuggestedMinimumWidth(): Int {
-        return  Math.ceil((progressBarWidth + setExtraWidthDataForExtremes()).toDouble()).toInt()
+        return  ceil((progressBarWidth + setExtraWidthDataForExtremes()).toDouble()).toInt()
     }
 
     override fun getSuggestedMinimumHeight(): Int {
-
-        return  Math.ceil((progressBarHeight +  setTextHeight()).toDouble()).toInt()
+        return  ceil((progressBarHeight +  setTextHeight()).toDouble()).toInt()
     }
 
     private fun setTextHeight(): Float {
-
-        if(markers.size==0){
+        if(markers.size == 0){
             return 0F
         }
 
@@ -184,26 +164,49 @@ class StepProgressView @JvmOverloads constructor(
         paintText.getTextBounds(text, 0, text.length, rect)
         textHeight = rect.height()
         return textHeight + textMargin
+    }
 
+    private fun setupMarkers(typedArray: TypedArray) {
+        val markerString = typedArray.getString(R.styleable.StepProgressView_markers)
+        if (!markerString.isNullOrBlank()) {
+            markers.clear()
+            val input = markerString.split(",")
+            try {
+                input.map { if(it.toInt() in 1 .. totalProgress) markers.add(it.toInt()) }
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Invalid input markers! Should be comma separated digits")
+            }
+        }
+    }
+
+    private fun setupMarkersLabels(typedArray: TypedArray) {
+        val labelsString = typedArray.getString(R.styleable.StepProgressView_markersLabels)
+        if (!labelsString.isNullOrBlank()) {
+            markersLabels.clear()
+            val input = labelsString.split(",")
+            try {
+                input.map { markersLabels.add(it) }
+            } catch (e: Exception) {
+                throw  IllegalArgumentException("Invalid input markersLabels! Should be comma separated digits")
+            }
+        }
     }
 
     /**
      * Calculates if there is any additional width needed to show marker text at extremer left/right
      * and sets variables accordingly
      */
-    private fun setExtraWidthDataForExtremes():Float {
-
+    private fun setExtraWidthDataForExtremes(): Float {
         extraWidthLeftText = 0F
         extraWidthRightText = 0F
 
-        markers.run {
-
+        markersLabels.run {
 
             if (size == 0)
                 return 0F
 
-            val extraWidthLeft: Float = paintText.measureText(this[0].toString())/2
-            val posXFirst: Float = (this[0] / totalProgress.toFloat()) * (progressBarWidth)
+            val extraWidthLeft: Float = paintText.measureText(this[0])/2
+            val posXFirst: Float = (markers[0] / totalProgress.toFloat()) * (progressBarWidth)
 
             if (posXFirst - extraWidthLeft < 0) {
                 extraWidthLeftText = extraWidthLeft - posXFirst
@@ -211,23 +214,19 @@ class StepProgressView @JvmOverloads constructor(
 
             val lastIndex = size - 1
             if (lastIndex > -1) {
-                val posXLast: Float = (this[lastIndex] / totalProgress.toFloat()) * (progressBarWidth)
-                val extraWidthRight: Float = paintText.measureText(this[lastIndex].toString())/2
+                val posXLast: Float = (markers[lastIndex] / totalProgress.toFloat()) * (progressBarWidth)
+                val extraWidthRight: Float = paintText.measureText(this[lastIndex])/2
                 if (posXLast + extraWidthRight > progressBarWidth) {
                     extraWidthRightText = (extraWidthRight - (progressBarWidth -posXLast))
                 }
-
             }
-
         }
+
         return extraWidthLeftText + extraWidthRightText
-
     }
-
 
     override fun onLayout(changed: Boolean, leftP: Int, topP: Int, rightP: Int, bottomP: Int) {
         super.onLayout(changed, leftP, topP, rightP, bottomP)
-
         rBar.apply {
             left = extraWidthLeftText
             top = 0F
@@ -235,13 +234,8 @@ class StepProgressView @JvmOverloads constructor(
             bottom = progressBarHeight
         }
 
-
         textVerticalCenter = (progressBarHeight + textMargin) + textHeight
-
-
     }
-
-
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -252,24 +246,20 @@ class StepProgressView @JvmOverloads constructor(
 
             val progressX = (currentProgress / totalProgress.toFloat()) * (rBar.right - rBar.left)
 
-
             if (progressX > rectRadius) { //if progress exceeds beyond left corner avoid redrawing
-
 
                 //progressX-1 is used so that there is no gap between progressRect drawing and
                 // backgroundRect Drawing
                 drawingPath.addPath(drawRoundedRightRect((progressX - 1), rBar.top, rBar.right,
                         rBar.bottom, rectRadius, paintBackground, canvas))
 
-
                 val progressRight: Float
                 val drawProgressInRightCorner = progressX > (rBar.right - rectRadius)
 
-                if (drawProgressInRightCorner) {
-                    progressRight = rBar.right - rectRadius
+                progressRight = if (drawProgressInRightCorner) {
+                    rBar.right - rectRadius
                 } else {
-                    progressRight = progressX
-
+                    progressX
                 }
 
                 drawingPath.addPath(drawRoundedLeftRect(rBar.left, rBar.top, progressRight,
@@ -279,32 +269,20 @@ class StepProgressView @JvmOverloads constructor(
                 canvas.clipPath(drawingPath)
 
                 if (drawProgressInRightCorner) {
-
                     canvas.drawRect((rBar.right - rectRadius), rBar.top, progressX, rBar.bottom, paintProgress)
-
                 }
 
-
             } else {
-
                 drawCompleteProgressBar(canvas, paintBackground)
 
                 canvas.drawRect(rBar.left, rBar.top, progressX, rBar.bottom, paintProgress)
-
-
             }
-
-
         } else {
-
-            //incase there is no progress only draw background progress bar
+            //in case there is no progress only draw background progress bar
             val paint = if (currentProgress > 0) paintProgress else paintBackground
 
             drawCompleteProgressBar(canvas, paint)
-
         }
-
-
 
         for (i in markers) {
             if (i in 1..totalProgress) {
@@ -313,27 +291,21 @@ class StepProgressView @JvmOverloads constructor(
 
                 canvas.drawRect(left - markerWidth / 2, rBar.top, left + markerWidth / 2
                         , rBar.bottom, paintMarkers)
-
-
             }
-
         }
 
         canvas.restore()
 
-
         // using one more for loop instead of saving & restoring canvas for text since, that would be
         //more precious
-        for (i in markers) {
-            if (i in 1..totalProgress) {
-                val left: Float = (i / totalProgress.toFloat()) * (rBar.right - rBar.left)+
-                        extraWidthLeftText
-
-                canvas.drawText(i.toString(), left, textVerticalCenter, paintText)
-            }
-
+        var index = 0
+        for (marker in markers) {
+            val left: Float = (marker / totalProgress.toFloat()) * (rBar.right - rBar.left)+
+                    extraWidthLeftText
+            val label = markersLabels.getOrNull(index) ?: marker.toString()
+            index += 1
+            canvas.drawText(label, left, textVerticalCenter, paintText)
         }
-
     }
 
     private fun drawCompleteProgressBar(canvas: Canvas, paint: Paint) {
@@ -344,11 +316,8 @@ class StepProgressView @JvmOverloads constructor(
         canvas.clipPath(drawingPath)
     }
 
-
-
     private fun drawRoundedLeftRect(leftP: Float, topP: Float, rightP: Float, bottomP: Float,
                                     cornerRadius: Float, paint: Paint, canvas: Canvas): Path {
-
         rectRoundPath.reset()
         arcRect.run {
             left = leftP
@@ -356,7 +325,6 @@ class StepProgressView @JvmOverloads constructor(
             right = leftP + (2 * cornerRadius)
             bottom = bottomP
         }
-
 
         rectRoundPath.addArc(arcRect, 90F, 180F)
 
@@ -366,7 +334,6 @@ class StepProgressView @JvmOverloads constructor(
 
         return rectRoundPath
     }
-
 
     private fun drawRoundedRightRect(leftP: Float, topP: Float, rightP: Float, bottomP: Float,
                                      cornerRadius: Float, paint: Paint, canvas: Canvas): Path {
@@ -378,8 +345,6 @@ class StepProgressView @JvmOverloads constructor(
             bottom = bottomP
         }
 
-
-
         rectRoundPath.reset()
         if (rightP - leftP > cornerRadius) {
             rectRoundPath.addRect(leftP, topP, rightP - cornerRadius, bottomP, Path.Direction.CW)
@@ -389,9 +354,7 @@ class StepProgressView @JvmOverloads constructor(
         canvas.drawPath(rectRoundPath, paint)
 
         return rectRoundPath
-
     }
-
 
     private fun Float.pxValue(unit: Int = TypedValue.COMPLEX_UNIT_DIP): Float {
         return TypedValue.applyDimension(unit, this, resources.displayMetrics)
@@ -406,15 +369,12 @@ class StepProgressView @JvmOverloads constructor(
             func()
             if (propsInitialisedOnce) {
                 requestLayout()
-
             }
-
         }
 
         operator fun getValue(thisRef: Any?, p: KProperty<*>): T {
             return field
         }
-
     }
 
     /**
@@ -426,15 +386,11 @@ class StepProgressView @JvmOverloads constructor(
             func()
             if (propsInitialisedOnce) {
                 invalidate()
-
             }
-
         }
 
         operator fun getValue(thisRef: Any?, p: KProperty<*>): T {
             return field
         }
-
     }
-
 }

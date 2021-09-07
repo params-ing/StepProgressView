@@ -17,6 +17,7 @@
         <attr name="textFont" format="reference"/>
 
         <attr name="markers" format="string" />
+        <attr name="markersLabels" format="string" />
     </declare-styleable>
 
 </resources>
